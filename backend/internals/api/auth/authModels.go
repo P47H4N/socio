@@ -7,3 +7,8 @@ type RegisterBody struct {
 	FullName string  `json:"full_name" binding:"required"`
 	Password string  `json:"-" binding:"required,min=6"`
 }
+
+type LoginBody struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}

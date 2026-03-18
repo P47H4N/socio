@@ -5,6 +5,7 @@ import (
 
 	"github.com/P47H4N/socio/cmd"
 	"github.com/P47H4N/socio/internals/database"
+	"github.com/P47H4N/socio/internals/helpers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +19,8 @@ func main() {
 	if err != nil {
 		log.Fatalln("Unable to load config.", err)
 	}
+	
+	helpers.LoadJWT(config.JWTToken)
 
 	db, err := database.NewDB(config)
 	if err != nil {

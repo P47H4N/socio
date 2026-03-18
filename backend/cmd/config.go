@@ -7,12 +7,13 @@ import (
 )
 
 type Config struct {
-	Port         string
-	DBHost       string
-	DBUser       string
-	DBPassword   string
-	DBName       string
-	DBPort       string
+	Port       string
+	DBHost     string
+	DBUser     string
+	DBPassword string
+	DBName     string
+	DBPort     string
+	JWTToken   string
 }
 
 func LoadConfig() (*Config, error) {
@@ -35,5 +36,6 @@ func LoadConfig() (*Config, error) {
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
 		DBPort:     os.Getenv("DB_PORT"),
+		JWTToken:   os.Getenv("JWTToken"),
 	}, nil
 }

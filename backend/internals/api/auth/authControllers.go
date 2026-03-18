@@ -64,3 +64,30 @@ func (ac *AuthController) RegisterUser(c *gin.Context) {
 	})
 }
 
+func (ac *AuthController) LoginUser(c *gin.Context) {
+	var loginBody LoginBody
+	if err := c.ShouldBindBodyWithJSON(&loginBody); err != nil{
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Message: "Invalid data.",
+			Error: err.Error(),
+		})
+		return
+	}
+	token, user, err := ac.srv.LoginUser(&loginBody)
+	if err != nil{
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Error: err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Login successful.",
+		Data: gin.H{
+			"token": token,
+			"user": user,
+		},
+	})
+}
