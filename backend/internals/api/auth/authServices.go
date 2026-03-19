@@ -74,12 +74,12 @@ func (as *AuthService) LoginUser(body *LoginBody) (string, *models.User, error) 
 func (as *AuthService) ForgotPassword(email, token string) error {
 	expiration := time.Now().Add(15 * time.Minute)
 	securityData := models.Security{
-        Email:     email,
-        Token:     token,
-        Type:      "password_reset",
-        ExpiredAt: expiration,
-        IsUsed:    false,
-    }
+		Email:     email,
+		Token:     token,
+		Type:      "password_reset",
+		ExpiredAt: expiration,
+		IsUsed:    false,
+	}
 	as.db.Model(&models.Security{}).Where("email = ? AND type = ? AND is_used = ?", email, "password_reset", false).Update("is_used", true)
 	if err := as.db.Create(&securityData).Error; err != nil {
 		return errors.New("Reset token can not be stored.")
@@ -94,6 +94,27 @@ func (as *AuthService) ConfirmToken(email, token string) error {
 	}
 	if result.RowsAffected == 0 {
 		return errors.New("Token invalid or already used")
+	}
+	return nil
+}
+
+func (as *AuthService) ResetPassword(reset *ResetBody) error {
+	var security models.Security
+	if err := as.db.Where("email = ? AND token = ?", reset.Email, reset.Token).First(&security).Error; err != nil {
+		return errors.New("Invalid email or token.")
+	}
+	if time.Now().After(security.ExpiredAt) {
+		return errors.New("Token has expired.")
+	}
+	hashedPassword, err := helpers.HashPassword(reset.Password)
+	if err != nil {
+		return errors.New("Failed to hash password.")
+	}
+	update := map[string]any{
+		"password": hashedPassword,
+	}
+	if err := as.db.Model(&models.User{}).Where("email = ?", reset.Email).Updates(&update).Error; err != nil {
+		return errors.New("Password update failed.")
 	}
 	return nil
 }

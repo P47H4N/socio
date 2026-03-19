@@ -10,5 +10,5 @@ func AuthRoutes(router *gin.RouterGroup, authController *AuthController) {
 	auth.POST("/confirm", authController.ConfirmToken)
 	auth.POST("/otp-send")
 	auth.POST("/otp-verify")
-	auth.POST("/reset-password")
+	auth.POST("/reset-password", authController.ResetPassword)
 }

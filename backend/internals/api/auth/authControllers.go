@@ -135,5 +135,32 @@ func (ac *AuthController) ConfirmToken(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
 		Message: "Email verification success.",
+		Data: gin.H{
+			"email": confirm.Email,
+			"token": confirm.Token,
+		},
+	})
+}
+
+func (ac *AuthController) ResetPassword(c *gin.Context) {
+	var reset ResetBody
+	if err := c.ShouldBindBodyWithJSON(&reset); err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Message: "Invalid data.",
+			Error: err.Error(),
+		})
+		return
+	}
+	if err := ac.srv.ResetPassword(&reset); err != nil{
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Password reset successful.",
 	})
 }
