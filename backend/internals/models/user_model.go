@@ -16,7 +16,7 @@ type User struct {
 	Bio           string         `json:"bio" gorm:"type:text"`
 	ProfilePic    string         `json:"profile_pic" gorm:"type:varchar(255)"`
 	CoverPic      string         `json:"cover_pic" gorm:"type:varchar(255)"`
-	LastSeen      time.Time      `json:"last_seen" gorm:"autoUpdateTime:false"`
+	LastSeen      time.Time      `json:"last_seen" gorm:"autoUpdateTime"`
 	AccountStatus string         `json:"account_status" gorm:"type:varchar(20);default:'active'"`
 	CreatedAt     time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt     time.Time      `json:"-" gorm:"autoUpdateTime"`

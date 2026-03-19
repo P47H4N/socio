@@ -26,20 +26,20 @@ func (as *AuthService) RegisterUser(body *RegisterBody) error {
 	if err != nil {
 		log.Fatalln("Password Hash is not working. Password:", body.Password, "->", err)
 	}
+	var phoneStr string
 	if body.Phone != nil {
-		if err := as.db.Where("phone = ?", body.Phone).First(&models.User{}).Error; err != nil {
+		phoneStr = *body.Phone
+		if err := as.db.Where("phone = ?", phoneStr).First(&models.User{}).Error; err == nil {
 			return errors.New("Mobile number already registered.")
 		}
 	}
-	if body.Email != nil {
-		if err := as.db.Where("email = ?", body.Email).First(&models.User{}).Error; err != nil {
-			return errors.New("Email already registered.")
-		}
+	if err := as.db.Where("email = ?", body.Email).First(&models.User{}).Error; err == nil {
+		return errors.New("Email already registered.")
 	}
 	newUser := &models.User{
 		Username: body.Username,
-		Email:    *body.Email,
-		Phone:    *body.Phone,
+		Email:    body.Email,
+		Phone:    phoneStr,
 		FullName: body.FullName,
 		Password: hashed_password,
 	}
@@ -51,7 +51,7 @@ func (as *AuthService) RegisterUser(body *RegisterBody) error {
 
 func (as *AuthService) LoginUser(body *LoginBody) (string, *models.User, error) {
 	var user models.User
-	if err := as.db.Where("username = ?", body.Username).Or("email = ?", body.Username).Or("mobile = ?", body.Username).First(&user).Error; err != nil {
+	if err := as.db.Where("username = ?", body.Username).Or("email = ?", body.Username).Or("phone = ?", body.Username).First(&user).Error; err != nil {
 		return "", nil, errors.New("User not found.")
 	}
 	if !helpers.CheckPasswordHash(body.Password, user.Password) {
@@ -71,7 +71,7 @@ func (as *AuthService) LoginUser(body *LoginBody) (string, *models.User, error) 
 	return token, &user, nil
 }
 
-func (as *AuthService) ResetPassword(email, token string) error {
+func (as *AuthService) ForgotPassword(email, token string) error {
 	expiration := time.Now().Add(15 * time.Minute)
 	securityData := models.Security{
         Email:     email,
@@ -80,9 +80,20 @@ func (as *AuthService) ResetPassword(email, token string) error {
         ExpiredAt: expiration,
         IsUsed:    false,
     }
-	as.db.Where("email = ? AND type = ? AND is_used = ?", email, "password_reset", false).Delete(&models.Security{})
+	as.db.Model(&models.Security{}).Where("email = ? AND type = ? AND is_used = ?", email, "password_reset", false).Update("is_used", true)
 	if err := as.db.Create(&securityData).Error; err != nil {
 		return errors.New("Reset token can not be stored.")
+	}
+	return nil
+}
+
+func (as *AuthService) ConfirmToken(email, token string) error {
+	result := as.db.Model(&models.Security{}).Where("email = ? AND token = ? AND is_used = ?", email, token, false).Update("is_used", true)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("Token invalid or already used")
 	}
 	return nil
 }

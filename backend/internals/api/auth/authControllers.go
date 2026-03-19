@@ -28,13 +28,6 @@ func (ac *AuthController) RegisterUser(c *gin.Context) {
 		})
 		return
 	}
-	if len(registerBody.Password) < 8 || len(registerBody.Password) > 32 {
-		c.JSON(http.StatusBadRequest, models.Response{
-			Success: false,
-			Message: "Password must be between 8 and 32 characters.",
-		})
-		return
-	}
 	if registerBody.Phone != nil {
 		if len(*registerBody.Phone) < 10 {
 			c.JSON(http.StatusBadRequest, models.Response{
@@ -47,14 +40,14 @@ func (ac *AuthController) RegisterUser(c *gin.Context) {
 	if _, err := helpers.ValidateUsername(registerBody.Username); err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
 			Success: false,
-			Error: err.Error(),
+			Error:   err.Error(),
 		})
 		return
 	}
 	if err := ac.srv.RegisterUser(&registerBody); err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
 			Success: false,
-			Error: err.Error(),
+			Error:   err.Error(),
 		})
 		return
 	}
@@ -66,19 +59,19 @@ func (ac *AuthController) RegisterUser(c *gin.Context) {
 
 func (ac *AuthController) LoginUser(c *gin.Context) {
 	var loginBody LoginBody
-	if err := c.ShouldBindBodyWithJSON(&loginBody); err != nil{
+	if err := c.ShouldBindBodyWithJSON(&loginBody); err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
 			Success: false,
 			Message: "Invalid data.",
-			Error: err.Error(),
+			Error:   err.Error(),
 		})
 		return
 	}
 	token, user, err := ac.srv.LoginUser(&loginBody)
-	if err != nil{
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
 			Success: false,
-			Error: err.Error(),
+			Error:   err.Error(),
 		})
 		return
 	}
@@ -87,25 +80,52 @@ func (ac *AuthController) LoginUser(c *gin.Context) {
 		Message: "Login successful.",
 		Data: gin.H{
 			"token": token,
-			"user": user,
+			"user":  user,
 		},
 	})
 }
 
-func (ac *AuthController) ResetPassword(c *gin.Context) {
-	var email struct{
+func (ac *AuthController) ForgotPassword(c *gin.Context) {
+	var email struct {
 		Email string `json:"email" binding:"required,email"`
 	}
-	if err := c.ShouldBindBodyWithJSON(&email); err != nil{
+	if err := c.ShouldBindBodyWithJSON(&email); err != nil {
 		c.JSON(http.StatusBadRequest, models.Response{
 			Success: false,
 			Message: "Please provide a valid email address.",
-			Error: err.Error(),
+			Error:   err.Error(),
 		})
 		return
 	}
 	token := helpers.GenerateVerificationToken(8)
-	if err := ac.srv.ResetPassword(email.Email, token); err != nil {
+	if err := ac.srv.ForgotPassword(email.Email, token); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+	go helpers.SendEmail(email.Email, token, "password_reset")
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Forgot password request successful.",
+	})
+}
+
+func (ac *AuthController) ConfirmToken(c *gin.Context) {
+	var confirm struct {
+		Email string `json:"email" binding:"required,email"`
+		Token string `json:"token" binding:"required"`
+	}
+	if err := c.ShouldBindBodyWithJSON(&confirm); err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Message: "Invalid data.",
+			Error:   err.Error(),
+		})
+		return
+	}
+	if err := ac.srv.ConfirmToken(confirm.Email, confirm.Token); err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
 			Success: false,
 			Message: err.Error(),
@@ -114,6 +134,6 @@ func (ac *AuthController) ResetPassword(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
-		Message: "Password reset successful.",
+		Message: "Email verification success.",
 	})
 }
