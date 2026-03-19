@@ -91,3 +91,29 @@ func (ac *AuthController) LoginUser(c *gin.Context) {
 		},
 	})
 }
+
+func (ac *AuthController) ResetPassword(c *gin.Context) {
+	var email struct{
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindBodyWithJSON(&email); err != nil{
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Message: "Please provide a valid email address.",
+			Error: err.Error(),
+		})
+		return
+	}
+	token := helpers.GenerateVerificationToken(8)
+	if err := ac.srv.ResetPassword(email.Email, token); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Password reset successful.",
+	})
+}

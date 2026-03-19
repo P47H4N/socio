@@ -70,3 +70,19 @@ func (as *AuthService) LoginUser(body *LoginBody) (string, *models.User, error) 
 	}
 	return token, &user, nil
 }
+
+func (as *AuthService) ResetPassword(email, token string) error {
+	expiration := time.Now().Add(15 * time.Minute)
+	securityData := models.Security{
+        Email:     email,
+        Token:     token,
+        Type:      "password_reset",
+        ExpiredAt: expiration,
+        IsUsed:    false,
+    }
+	as.db.Where("email = ? AND type = ? AND is_used = ?", email, "password_reset", false).Delete(&models.Security{})
+	if err := as.db.Create(&securityData).Error; err != nil {
+		return errors.New("Reset token can not be stored.")
+	}
+	return nil
+}
