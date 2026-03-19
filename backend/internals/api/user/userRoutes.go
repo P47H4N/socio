@@ -10,13 +10,13 @@ func UserRoutes(router *gin.RouterGroup, userController *UserController) {
 	userRoute.Use(middleware.UserMiddleware())
 	{
 		userRoute.GET("/:id", userController.GetProfile)
-		userRoute.GET("/search")
+		userRoute.GET("/search", )
 		userRoute.POST("/change-password", userController.ChangePassword)
 		userRoute.PATCH("/update/bio")
 		userRoute.PATCH("/update/name")
 		userRoute.PATCH("/update/username")
 		userRoute.POST("/update/avatar")
 		userRoute.POST("/update/cover")
-		userRoute.DELETE("/:id")
+		userRoute.DELETE("/:id", userController.DeleteUser)
 	}
 }

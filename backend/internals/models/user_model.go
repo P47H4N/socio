@@ -10,7 +10,7 @@ type User struct {
 	ID            uint           `json:"id" gorm:"primaryKey"`
 	Username      string         `json:"username" gorm:"type:varchar(50);uniqueIndex;not null"`
 	Email         string         `json:"email" gorm:"type:varchar(100);uniqueIndex;not null"`
-	Phone         string         `json:"phone" gorm:"type:varchar(20);uniqueIndex"`
+	Phone         *string        `json:"phone" gorm:"type:varchar(20);uniqueIndex;default:null"`
 	FullName      string         `json:"full_name" gorm:"type:varchar(100);not null"`
 	Password      string         `json:"-" gorm:"type:varchar(255);not null"`
 	Bio           string         `json:"bio" gorm:"type:text"`

@@ -47,10 +47,9 @@ func (uc *UserController) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
 		Message: "User found.",
-		Data: user,
+		Data:    user,
 	})
 }
-
 
 func (uc *UserController) ChangePassword(c *gin.Context) {
 	getUserId, _ := c.Get("userId")
@@ -73,5 +72,29 @@ func (uc *UserController) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Success: false,
 		Message: "Password Changed Successfully.",
+	})
+}
+
+func (uc *UserController) DeleteUser(c *gin.Context) {
+	getUserId, _ := c.Get("userId")
+	userId := getUserId.(uint)
+	paramId, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	if uint(paramId) != userId {
+		c.JSON(http.StatusUnauthorized, models.Response{
+			Success: false,
+			Message: "Unauthorized.",
+		})
+		return
+	}
+	if err := uc.srv.DeleteUser(uint(paramId)); err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "User deleted successfully.",
 	})
 }

@@ -23,17 +23,23 @@ func NewService(db *gorm.DB) *AuthService {
 
 func (as *AuthService) RegisterUser(body *RegisterBody) error {
 	hashed_password, err := helpers.HashPassword(body.Password)
+	var user models.User
 	if err != nil {
 		log.Fatalln("Password Hash is not working. Password:", body.Password, "->", err)
 	}
-	var phoneStr string
+	var phoneStr *string
 	if body.Phone != nil {
-		phoneStr = *body.Phone
-		if err := as.db.Where("phone = ?", phoneStr).First(&models.User{}).Error; err == nil {
-			return errors.New("Mobile number already registered.")
+		phoneStr = body.Phone
+		if err := as.db.Unscoped().Where("phone = ?", phoneStr).First(&user).Error; err == nil {
+			return errors.New("This mobile number is already linked to another account.")
 		}
 	}
-	if err := as.db.Where("email = ?", body.Email).First(&models.User{}).Error; err == nil {
+	err = as.db.Unscoped().Where("username = ?", body.Username).First(&user).Error;
+	log.Println(err)
+	if  err == nil {
+		return errors.New("This username is already taken.")
+	}
+	if err := as.db.Where("email = ? AND account_status = ?", body.Email, "active").First(&user).Error; err == nil {
 		return errors.New("Email already registered.")
 	}
 	newUser := &models.User{
@@ -46,6 +52,12 @@ func (as *AuthService) RegisterUser(body *RegisterBody) error {
 	if err := as.db.Create(&newUser).Error; err != nil {
 		return errors.New("Registration failed.")
 	}
+	userSetting := models.UserSetting{
+		UserID: newUser.ID,
+	}
+	if err := as.db.Create(&userSetting).Error; err != nil {
+		return errors.New("User settings not created.")
+	}
 	return nil
 }
 
@@ -56,6 +68,9 @@ func (as *AuthService) LoginUser(body *LoginBody) (string, *models.User, error) 
 	}
 	if !helpers.CheckPasswordHash(body.Password, user.Password) {
 		return "", nil, errors.New("Wrong password.")
+	}
+	if user.AccountStatus != "active" {
+		return "", nil, helpers.AccountStatusCalculator(user.AccountStatus, user.DeletedAt.Time)
 	}
 	token, err := helpers.GenerateToken(&models.TokenBody{
 		Id:       user.ID,
