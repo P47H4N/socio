@@ -2,6 +2,7 @@ package setting
 
 import (
 	"errors"
+	"time"
 
 	"github.com/P47H4N/socio/internals/models"
 	"gorm.io/gorm"
@@ -44,5 +45,38 @@ func (ss *SettingService) UpdateSetting(body *SettingsBody, uid uint) error {
     if err := ss.db.Model(&models.UserSetting{}).Where("user_id = ?", uid).Updates(updateSetting).Error; err != nil {
         return errors.New("Failed to update data.")
     }
+	return nil
+}
+
+func (ss *SettingService) GetUserReports(uid uint) ([]models.Report, error) {
+	var reports []models.Report
+	if err := ss.db.Where("reporter_id = ?", uid).Find(&reports).Error; err != nil {
+		return nil, errors.New("Unable to fetch data.")
+	}
+	if len(reports) == 0 {
+		return nil, errors.New("No reports found.")
+	}
+	return reports, nil
+}
+
+func (ss *SettingService) GetReportDetails(rid, uid uint) (*models.Report, error) {
+	var report models.Report
+	if err := ss.db.Where("id = ? AND reporter_id = ?", rid, uid).First(&report).Error; err != nil {
+		return nil, errors.New("Unable to fetch report details.")
+	}
+	return &report, nil
+}
+
+func (ss *SettingService) SubmitReport(uid uint, body *ReportBody) error {
+	report := models.Report{
+		ReporterID: uid,
+		TargetType: body.TargetType,
+		TargetID: body.TargetID,
+		Reason: body.Reason,
+		CreatedAt: time.Now(),
+	}
+	if err := ss.db.Create(&report).Error; err != nil {
+		return errors.New("Report create failed.")
+	}
 	return nil
 }

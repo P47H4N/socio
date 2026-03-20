@@ -78,7 +78,14 @@ func (uc *UserController) ChangePassword(c *gin.Context) {
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	getUserId, _ := c.Get("userId")
 	userId := getUserId.(uint)
-	paramId, _ := strconv.ParseUint(c.Param("id"), 10, 32)
+	paramId, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Message: "Invalid user id.",
+		})
+		return
+	}
 	if uint(paramId) != userId {
 		c.JSON(http.StatusUnauthorized, models.Response{
 			Success: false,

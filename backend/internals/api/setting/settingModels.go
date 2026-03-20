@@ -7,3 +7,9 @@ type SettingsBody struct {
 	PushNotification  *bool   `json:"push_notification"`
 	Language          *string `json:"language"`
 }
+
+type ReportBody struct {
+	TargetType string    `json:"target_type" binding:"omitempty,oneof=profile post comment"`
+	TargetID   uint      `json:"target_id"`
+	Reason     string    `json:"reason"`
+}

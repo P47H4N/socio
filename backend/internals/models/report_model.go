@@ -5,7 +5,7 @@ import (
 )
 
 type Report struct {
-	ID         uint      `json:"-" gorm:"primaryKey"`
+	ID         uint      `json:"id" gorm:"primaryKey"`
 	ReporterID uint      `json:"reporter_id" gorm:"not null;index"`
 	TargetType string    `json:"target_type" gorm:"type:varchar(20);not null;check:target_type IN ('profile', 'post', 'comment')"`
 	TargetID   uint      `json:"target_id" gorm:"not null"`
