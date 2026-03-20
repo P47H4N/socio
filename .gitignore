@@ -2,3 +2,4 @@ api.txt
 database.txt
 
 backend/.env
+backend/internals/helpers/secret.go

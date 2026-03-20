@@ -1,7 +1,7 @@
 package models
 
 type UserSetting struct {
-	ID                uint   `json:"id" gorm:"primaryKey"`
+	ID                uint   `json:"-" gorm:"primaryKey"`
 	UserID            uint   `json:"user_id" gorm:"uniqueIndex;not null"`
 	IsPrivateAccount  bool   `json:"is_private_account" gorm:"default:false"`
 	AllowMessage      string `json:"allow_message" gorm:"type:varchar(20);default:'everyone'"`
