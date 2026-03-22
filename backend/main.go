@@ -13,6 +13,7 @@ import (
 func main() {
 	// gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	router.Static("/uploads", "./uploads")
 	router.Use(cors.Default())
 	
 	config, err := cmd.LoadConfig()

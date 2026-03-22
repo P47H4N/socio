@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/P47H4N/socio/internals/api/auth"
+	"github.com/P47H4N/socio/internals/api/post"
 	"github.com/P47H4N/socio/internals/api/setting"
 	"github.com/P47H4N/socio/internals/api/user"
 	"github.com/gin-gonic/gin"
@@ -19,6 +20,10 @@ func Start(router *gin.RouterGroup, db *gorm.DB) {
 	userController := user.NewController(userService)
 	user.UserRoutes(router, userController)
 
+	//Post
+	postService := post.NewService(db)
+	postController := post.NewController(postService)
+	post.PostRoutes(router, postController)
 
 	// Report
 	settingService := setting.NewService(db)
