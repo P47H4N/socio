@@ -9,17 +9,18 @@ func PostRoutes(router *gin.RouterGroup, postController *PostController) {
 	postRoute := router.Group("/posts")
 	{
 		postRoute.GET("/:id", postController.GetPost)
-		postRoute.GET("/:id/comments") // View Comment
+		postRoute.GET("/:id/comments", postController.GetComment)
+		postRoute.GET("/:id/reply", postController.GetReply)
 		postPrivateRoute := postRoute.Group("/")
 		postPrivateRoute.Use(middleware.UserMiddleware())
 		{
 			postPrivateRoute.GET("/", postController.Newsfeed)
 			postPrivateRoute.POST("/", postController.CreatePost)
-			postPrivateRoute.PATCH("/:id") // Update Post
+			postPrivateRoute.PATCH("/:id", postController.UpdatePost)
 			postPrivateRoute.DELETE("/:id", postController.DeletePost)
-			postPrivateRoute.POST("/:id/react")    // Toogle React
-			postPrivateRoute.POST("/:id/comments") // Create Comment
-			router.DELETE("/comments/:id")  // Delete Comment
+			postPrivateRoute.POST("/:id/react", postController.ToggleReact)
+			postPrivateRoute.POST("/:id/comments", postController.CreateComment)
+			postPrivateRoute.DELETE("/comments/:id", postController.DeleteComment)
 		}
 	}
 }

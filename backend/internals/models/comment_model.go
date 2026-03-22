@@ -15,4 +15,6 @@ type Comment struct {
 	MediaURL  string         `json:"media_url" gorm:"type:varchar(255)"`
 	CreatedAt time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	Replies   []Comment      `json:"replies,omitempty" gorm:"foreignKey:ParentID"`
+	User      User           `json:"user" gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
