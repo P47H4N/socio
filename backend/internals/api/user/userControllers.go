@@ -19,24 +19,8 @@ func NewController(srv *UserService) *UserController {
 }
 
 func (uc *UserController) GetProfile(c *gin.Context) {
-	paramId, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, models.Response{
-			Success: false,
-			Message: "Invalid user id.",
-		})
-		return
-	}
-	getUserId, _ := c.Get("userId")
-	userId := getUserId.(uint)
-	if uint(paramId) != userId {
-		c.JSON(http.StatusUnauthorized, models.Response{
-			Success: false,
-			Message: "Unauthorized.",
-		})
-		return
-	}
-	user, err := uc.srv.GetProfile(uint(paramId))
+	paramId := c.Param("id")
+	user, follower, following, err := uc.srv.GetProfile(paramId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.Response{
 			Success: false,
@@ -44,10 +28,27 @@ func (uc *UserController) GetProfile(c *gin.Context) {
 		})
 		return
 	}
+	getUserId, _ := c.Get("userId")
+	userId := getUserId.(uint)
+	getUser := models.User {
+		ID : user.ID,
+		Username: user.Username,
+		FullName: user.FullName,
+		Bio: user.Bio,
+		ProfilePic: user.ProfilePic,
+		CoverPic: user.CoverPic,
+		FollowerCount: follower,
+		FollowingCount: following,
+		CreatedAt: user.CreatedAt,
+	}
+	if userId == user.ID {
+		getUser.Email = user.Email
+		getUser.Phone = user.Phone
+	}
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
 		Message: "User found.",
-		Data:    user,
+		Data:    getUser,
 	})
 }
 

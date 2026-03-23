@@ -1,7 +1,21 @@
 .vscode/
+.idea/
+.DS_Store
 
 api.txt
 database.txt
 
 backend/.env
+backend/bin/
+backend/*.exe
+backend/*.test
+backend/vendor/
+
 backend/internals/helpers/secret.go
+
+
+frontend/
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*.local

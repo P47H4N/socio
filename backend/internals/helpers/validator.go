@@ -8,8 +8,8 @@ import (
 )
 
 func ValidateUsername(username string) (bool, error) {
-	if len(username) < 3 || len(username) > 20 {
-		return false, errors.New("Username must be between 3 and 20 characters.")
+	if len(username) < 5 || len(username) > 20 {
+		return false, errors.New("Username must be between 5 and 20 characters.")
 	}
 
 	usernameRegex := regexp.MustCompile(`^[a-zA-Z0-9.]+$`)

@@ -48,6 +48,36 @@ func (pc *PostController) GetPost(c *gin.Context) {
 	})
 }
 
+func (pc *PostController) GetUserPost(c *gin.Context) {
+	var userId uint = 0
+	if val, exists := c.Get("userId"); exists {
+		if id, ok := val.(uint); ok {
+			userId = id
+		}
+	}
+	paramId, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.Response{
+			Success: false,
+			Message: "Invalid post id.",
+		})
+		return
+	}
+	posts, err := pc.srv.GetUserPost(uint(paramId), userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Post fetch successfully.",
+		Data: posts,
+	})
+}
+
 func (pc *PostController) CreatePost(c *gin.Context) {
 	var post PostBody
 	if err := c.ShouldBind(&post); err != nil {

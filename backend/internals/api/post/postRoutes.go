@@ -9,6 +9,7 @@ func PostRoutes(router *gin.RouterGroup, postController *PostController) {
 	postRoute := router.Group("/posts")
 	{
 		postRoute.GET("/:id", postController.GetPost)
+		postRoute.GET("/user/:id", postController.GetUserPost)
 		postRoute.GET("/:id/comments", postController.GetComment)
 		postRoute.GET("/:id/reply", postController.GetReply)
 		postPrivateRoute := postRoute.Group("/")

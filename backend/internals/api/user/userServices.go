@@ -3,6 +3,7 @@ package user
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/P47H4N/socio/internals/helpers"
@@ -20,19 +21,33 @@ func NewService(db *gorm.DB) *UserService {
 	}
 }
 
-func (us *UserService) GetProfile(uid uint) (*models.User, error) {
+func (us *UserService) GetProfile(identifier string) (*models.User, int64, int64, error) {
 	var user models.User
-	query := us.db.First(&user, uid).Error
-	if user.AccountStatus != "active" {
-		return nil, helpers.AccountStatusCalculator(user.AccountStatus, user.DeletedAt.Time)
-    }
-	if query != nil {
-		if query == gorm.ErrRecordNotFound {
-			return nil, errors.New("User id not found.")
-		}
-		return nil, errors.New("Internal error.")
+	var follower, following int64
+	var query *gorm.DB
+
+	id, err := strconv.Atoi(identifier)
+	if err == nil {
+		query = us.db.First(&user, id)
+	} else {
+		query = us.db.Where("username = ?", identifier).First(&user)
 	}
-	return &user, nil
+
+	if query.Error != nil {
+		if query.Error == gorm.ErrRecordNotFound {
+			return nil, 0, 0, errors.New("User not found.")
+		}
+		return nil, 0, 0, errors.New("Internal error.")
+	}
+
+	if user.AccountStatus != "active" {
+		return nil, 0, 0, helpers.AccountStatusCalculator(user.AccountStatus, user.DeletedAt.Time)
+	}
+
+	us.db.Model(&models.Follower{}).Where("following_id = ?", user.ID).Count(&follower)
+	us.db.Model(&models.Follower{}).Where("follower_id = ?", user.ID).Count(&following)
+
+	return &user, follower, following, nil
 }
 
 func (us *UserService) ChangePassword(body *ChangePasswordBody, uid uint) error {

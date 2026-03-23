@@ -24,10 +24,29 @@ func (ps *PostService) Newsfeed() ([]*models.Post, error) {
 
 func (ps *PostService) GetPost(id uint) (*models.Post, error) {
 	var post models.Post
-	if err := ps.db.Preload("User").Where("id = ?", id).First(&post).Error; err != nil {
+	if err := ps.db.Preload("User", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, username, full_name, profile_pic")
+    }).Where("id = ?", id).First(&post).Error; err != nil {
 		return nil, errors.New("Post not found.")
 	}
 	return &post, nil
+}
+
+func (ps *PostService) GetUserPost(id, uid uint) ([]models.Post, error) {
+	var posts []models.Post
+	var user models.UserSetting
+	if err := ps.db.Where("user_id = ?", id).First(&user).Error; err != nil {
+		return nil, errors.New("User not found.")
+	}
+	if user.IsPrivateAccount && uid != id {
+		return nil, errors.New("This account is private.")
+	}
+	if err := ps.db.Preload("User", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, username, full_name, profile_pic")
+    }).Where("user_id = ?", id).Find(&posts).Error; err != nil {
+		return nil, errors.New("Post not found.")
+	}
+	return posts, nil
 }
 
 func (ps *PostService) CreatePost(uid uint, body *PostBody, path string) error {
@@ -114,7 +133,9 @@ func (ps *PostService) ToggleReact(uid, pid uint, body *ReactBody) error {
 
 func (ps *PostService) GetComment(pid uint) ([]models.Comment, error) {
 	var comments []models.Comment
-	if err := ps.db.Preload("User").Where("post_id = ? AND parent_id IS NULL", pid).Order("created_at DESC").Find(&comments).Error; err != nil {
+	if err := ps.db.Preload("User", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, username, full_name, profile_pic")
+    }).Where("post_id = ? AND parent_id IS NULL", pid).Order("created_at DESC").Find(&comments).Error; err != nil {
 		return nil, errors.New("Unable to find comments.")
 	}
 	return comments, nil
@@ -122,7 +143,9 @@ func (ps *PostService) GetComment(pid uint) ([]models.Comment, error) {
 
 func (ps *PostService) GetReply(cid uint) ([]models.Comment, error) {
 	var replies []models.Comment
-	if err := ps.db.Preload("User").Where("parent_id = ?", cid).Order("created_at DESC").Find(&replies).Error; err != nil {
+	if err := ps.db.Preload("User", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, username, full_name, profile_pic")
+    }).Where("parent_id = ?", cid).Order("created_at DESC").Find(&replies).Error; err != nil {
 		return nil, errors.New("Unable to find replies.")
 	}
 	return nil, nil
