@@ -8,7 +8,7 @@ func AuthRoutes(router *gin.RouterGroup, authController *AuthController) {
 	auth.POST("/login", authController.LoginUser)
 	auth.POST("/forgot", authController.ForgotPassword)
 	auth.POST("/confirm", authController.ConfirmToken)
-	auth.POST("/otp-send")
-	auth.POST("/otp-verify")
+	// auth.POST("/otp-send")
+	// auth.POST("/otp-verify")
 	auth.POST("/reset-password", authController.ResetPassword)
 }

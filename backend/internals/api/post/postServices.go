@@ -18,8 +18,13 @@ func NewService(db *gorm.DB) *PostService {
 	}
 }
 
-func (ps *PostService) Newsfeed() ([]*models.Post, error) {
-	return nil, nil
+func (ps *PostService) Newsfeed(uid uint, limit int, offset int) ([]models.Post, error) {
+    var posts []models.Post
+    query := `SELECT p.* FROM posts p LEFT JOIN followers f ON f.following_id = p.user_id AND f.follower_id = ? ORDER BY CASE WHEN f.follower_id IS NOT NULL THEN 0 ELSE 1 END, p.created_at DESC LIMIT ? OFFSET ?`
+    if err := ps.db.Raw(query, uid, limit, offset).Scan(&posts).Error; err != nil {
+        return nil, err
+    }
+    return posts, nil
 }
 
 func (ps *PostService) GetPost(id uint) (*models.Post, error) {

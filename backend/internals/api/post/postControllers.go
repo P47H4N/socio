@@ -21,7 +21,24 @@ func NewController(srv *PostService) *PostController {
 }
 
 func (pc *PostController) Newsfeed(c *gin.Context) {
-
+	getUserId, _ := c.Get("userId")
+	userId := getUserId.(uint)
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "30"))
+	offset := (page - 1) * limit
+	posts, err := pc.srv.Newsfeed(userId, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Success: false,
+			Message: err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, models.Response{
+		Success: true,
+		Message: "Newsfeed fetched successfully.",
+		Data:    posts,
+	})
 }
 
 func (pc *PostController) GetPost(c *gin.Context) {
@@ -44,7 +61,7 @@ func (pc *PostController) GetPost(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
 		Message: "Post fetch successfully.",
-		Data: post,
+		Data:    post,
 	})
 }
 
@@ -74,7 +91,7 @@ func (pc *PostController) GetUserPost(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
 		Message: "Post fetch successfully.",
-		Data: posts,
+		Data:    posts,
 	})
 }
 
@@ -100,17 +117,17 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 	file, err := c.FormFile("media")
 	var mediaPath string
 	if err == nil {
-        filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
-        dst := "./uploads/" + filename
-        if err := c.SaveUploadedFile(file, dst); err != nil {
+		filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+		dst := "./uploads/" + filename
+		if err := c.SaveUploadedFile(file, dst); err != nil {
 			c.JSON(http.StatusInternalServerError, models.Response{
 				Success: false,
 				Message: "Failed to save media.",
 			})
-            return
-        }
-        mediaPath = "/uploads/" + filename
-    }
+			return
+		}
+		mediaPath = "/uploads/" + filename
+	}
 	getUserId, _ := c.Get("userId")
 	userId := getUserId.(uint)
 	if err := pc.srv.CreatePost(userId, &post, mediaPath); err != nil {
@@ -146,17 +163,17 @@ func (pc *PostController) UpdatePost(c *gin.Context) {
 	var mediaPath string
 	file, err := c.FormFile("media")
 	if err == nil {
-        filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
-        dst := "./uploads/" + filename
-        if err := c.SaveUploadedFile(file, dst); err != nil {
+		filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+		dst := "./uploads/" + filename
+		if err := c.SaveUploadedFile(file, dst); err != nil {
 			c.JSON(http.StatusInternalServerError, models.Response{
 				Success: false,
 				Message: "Failed to save media.",
 			})
-            return
-        }
-        mediaPath = "/uploads/" + filename
-    }
+			return
+		}
+		mediaPath = "/uploads/" + filename
+	}
 	getUserId, _ := c.Get("userId")
 	userId := getUserId.(uint)
 	if err := pc.srv.UpdatePost(userId, uint(paramId), &post, mediaPath); err != nil {
@@ -248,7 +265,7 @@ func (pc *PostController) GetComment(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
 		Message: "Comments fetch successfully.",
-		Data: comments,
+		Data:    comments,
 	})
 }
 
@@ -272,7 +289,7 @@ func (pc *PostController) GetReply(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{
 		Success: true,
 		Message: "Replies fetch successfully.",
-		Data: replies,
+		Data:    replies,
 	})
 }
 
@@ -298,17 +315,17 @@ func (pc *PostController) CreateComment(c *gin.Context) {
 	var mediaPath string
 	file, err := c.FormFile("media")
 	if err == nil {
-        filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
-        dst := "./uploads/" + filename
-        if err := c.SaveUploadedFile(file, dst); err != nil {
+		filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+		dst := "./uploads/" + filename
+		if err := c.SaveUploadedFile(file, dst); err != nil {
 			c.JSON(http.StatusInternalServerError, models.Response{
 				Success: false,
 				Message: "Failed to save media.",
 			})
-            return
-        }
-        mediaPath = "/uploads/" + filename
-    }
+			return
+		}
+		mediaPath = "/uploads/" + filename
+	}
 	getUserId, _ := c.Get("userId")
 	userId := getUserId.(uint)
 	if err := pc.srv.CreateComment(userId, &comment, mediaPath); err != nil {
